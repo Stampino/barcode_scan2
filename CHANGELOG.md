@@ -4,6 +4,8 @@
   - reading the camera parameters while the scanner opens (`getParameters failed (empty parameters)`);
   - toggling the flash (`getParameters failed`);
   - starting the camera (`Fail to get camera info`): the scanner now closes as cancelled.
+- Closes the scanner as cancelled when it is started without its configuration (e.g. by an automated test crawler) instead of crashing.
+- `scan()` called while a scan is already open (e.g. a double tap) now returns that scan's result instead of starting a second one, which made Android report `No active stream to cancel`.
 
 ## 4.8.0
 

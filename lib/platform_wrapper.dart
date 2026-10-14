@@ -24,13 +24,25 @@ class BarcodeScanner {
   static const EventChannel _eventChannel =
       EventChannel('de.mintware.barcode_scan/events');
 
+  static Future<ScanResult>? _activeScan;
+
   /// Starts the camera for scanning the barcode, shows a preview window and
   /// returns the barcode if one was scanned.
   /// Can throw an exception.
   /// See also [cameraAccessDenied]
+  ///
+  /// A call made while a scan is already open (e.g. a double tap) gets that
+  /// scan's result instead of starting a second one: two scans would share the
+  /// event channel, and the second cancel would fail with
+  /// "No active stream to cancel".
   static Future<ScanResult> scan({
     ScanOptions options = const ScanOptions(),
-  }) async {
+  }) {
+    return _activeScan ??=
+        _scan(options).whenComplete(() => _activeScan = null);
+  }
+
+  static Future<ScanResult> _scan(ScanOptions options) async {
     if (Platform.isIOS) {
       return _doScan(options);
     }

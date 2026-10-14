@@ -51,6 +51,15 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Started without the configuration the plugin passes (e.g. directly by an automated
+        // test crawler): close as cancelled instead of crashing.
+        val configBytes = intent.extras?.getByteArray(EXTRA_CONFIG)
+        if (configBytes == null) {
+            setResult(RESULT_CANCELED)
+            finish()
+            return
+        }
+
         //lock orientation
         val rotation = (getSystemService(
                 Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
@@ -63,7 +72,7 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
         requestedOrientation = orientation
 
-        config = Protos.Configuration.parseFrom(intent.extras!!.getByteArray(EXTRA_CONFIG))
+        config = Protos.Configuration.parseFrom(configBytes)
 
         var title = config.android.appBarTitle as String
         if (title.isNotEmpty()) {
