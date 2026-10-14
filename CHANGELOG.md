@@ -1,3 +1,10 @@
+## 4.8.1
+
+- Fixes Android crashes when the camera is busy or in a bad state:
+  - reading the camera parameters while the scanner opens (`getParameters failed (empty parameters)`);
+  - toggling the flash (`getParameters failed`);
+  - starting the camera (`Fail to get camera info`): the scanner now closes as cancelled.
+
 ## 4.8.0
 
 - Adds Swift Package Manager support for iOS (vendored MTBBarcodeScanner becomes its own Obj-C SPM target; the plugin stays CocoaPods-compatible).

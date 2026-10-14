@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Surface
@@ -23,6 +24,7 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
     private var scannerView: ZXingScannerView? = null
 
     companion object {
+        private const val TAG = "BarcodeScannerActivity"
         const val TOGGLE_FLASH = 200
         const val CANCEL = 300
         const val EXTRA_CONFIG = "config"
@@ -109,7 +111,12 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == TOGGLE_FLASH) {
-            scannerView?.toggleFlash()
+            try {
+                scannerView?.toggleFlash()
+            } catch (e: RuntimeException) {
+                // The camera can fail to report its parameters ("getParameters failed").
+                Log.w(TAG, "Could not toggle the flash", e)
+            }
             this.invalidateOptionsMenu()
             return true
         }
@@ -130,10 +137,18 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
         super.onResume()
         setupScannerView()
         scannerView?.setResultHandler(this)
-        if (config.useCamera > -1) {
-            scannerView?.startCamera(config.useCamera)
-        } else {
-            scannerView?.startCamera()
+        try {
+            if (config.useCamera > -1) {
+                scannerView?.startCamera(config.useCamera)
+            } else {
+                scannerView?.startCamera()
+            }
+        } catch (e: RuntimeException) {
+            // A busy or broken camera throws here ("Fail to get camera info"). Close the
+            // scanner as cancelled rather than crash; the user can try again.
+            Log.w(TAG, "Could not start the camera", e)
+            setResult(RESULT_CANCELED)
+            finish()
         }
     }
     // endregion

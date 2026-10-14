@@ -12,14 +12,16 @@ class ZXingAutofocusScannerView(context: Context) : ZXingScannerView(context) {
     private var autofocusPresence = false
 
     override fun setupCameraPreview(cameraWrapper: CameraWrapper?) {
-        cameraWrapper?.mCamera?.parameters?.let { parameters ->
-            try {
+        // Reading the parameters can throw too ("getParameters failed (empty parameters)")
+        // when the camera is in a bad state, so it belongs inside the try.
+        try {
+            cameraWrapper?.mCamera?.parameters?.let { parameters ->
                 autofocusPresence = parameters.supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO);
                 parameters.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
                 cameraWrapper.mCamera.parameters = parameters
-            } catch (ex: Exception) {
-                callbackFocus = true
             }
+        } catch (ex: Exception) {
+            callbackFocus = true
         }
         super.setupCameraPreview(cameraWrapper)
     }
