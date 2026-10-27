@@ -17,6 +17,10 @@ public class BarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerViewContr
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         self.result = result
         if ("scan" == call.method) {
+            if cameraRefused() {
+                result(FlutterError(code: "PERMISSION_NOT_GRANTED", message: nil, details: nil))
+                return
+            }
             let configuration: Configuration? = getPayload(call: call)
             showBarcodeView(config: configuration)}
         else if ("numberOfCameras" == call.method) {
@@ -28,6 +32,17 @@ public class BarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerViewContr
         }
     }
     
+    // A camera already refused is answered before the scanner opens: presented first, the scanner flashed on
+    // screen only to close once it found it couldn't use the camera. Not yet asked, it opens and asks.
+    private func cameraRefused() -> Bool {
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        return status == .denied || status == .restricted
+        #endif
+    }
+
     private func showBarcodeView(config: Configuration? = nil) {
     
 				if let rootVC = UIApplication.shared.keyWindow?.rootViewController {
